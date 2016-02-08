@@ -3,7 +3,6 @@ package com.sync.counter.server.protocol.worker;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import com.sync.counter.server.service.CounterService;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +14,9 @@ import com.sync.counter.common.protocol.CounterMessageResponse.ResponseType;
 import com.sync.counter.common.protocol.ResponseMessageBuilder;
 import com.sync.counter.common.protocol.parser.CounterResponseParser;
 import com.sync.counter.server.exception.ServerException;
-import com.sync.counter.server.protocol.ChannelMessage;
+import com.sync.counter.server.protocol.ChannelPayload;
 import com.sync.counter.server.protocol.SocketChannelAccepter;
+import com.sync.counter.server.service.CounterService;
 
 @Component
 @Scope("prototype")
@@ -27,9 +27,9 @@ public class WorkerNode implements Runnable {
 	@Autowired
 	private CounterService counterService;
 	
-	private ChannelMessage channelMessage;
+	private ChannelPayload channelMessage;
 
-	public void setChannelMessage(ChannelMessage channelMessage) {
+	public void setChannelMessage(ChannelPayload channelMessage) {
 		this.channelMessage = channelMessage;
 	}
 
@@ -51,7 +51,7 @@ public class WorkerNode implements Runnable {
 	 * @throws ServerException
 	 * @See CounterBean
 	 */
-	protected void processRequestAndResponse(ChannelMessage message) throws ServerException {
+	protected void processRequestAndResponse(ChannelPayload message) throws ServerException {
 		final ResponseMessageBuilder builder = new ResponseMessageBuilder();
 		builder.withType(ResponseType.ok);
 

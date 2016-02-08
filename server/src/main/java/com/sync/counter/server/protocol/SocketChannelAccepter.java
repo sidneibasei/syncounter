@@ -8,11 +8,11 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
-import java.util.Queue;
 import java.util.Set;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.sync.counter.common.protocol.CounterMessageRequest;
@@ -23,20 +23,20 @@ import com.sync.counter.common.protocol.ResponseMessageBuilder;
 import com.sync.counter.common.protocol.WrongMessageException;
 import com.sync.counter.common.protocol.parser.CounterRequestParser;
 import com.sync.counter.common.protocol.parser.CounterResponseParser;
+import com.sync.counter.server.protocol.queue.CounterMessageProcessor;
+import com.sync.counter.server.protocol.queue.QueueServiceBean;
 
 @Component
 public class SocketChannelAccepter extends Thread {
 
 	private static final Logger logger = LogManager.getLogger(SocketChannelAccepter.class);
 
-	private Queue<ChannelMessage> queue;
 	private ServerSocketChannel serverSocketChannel;
 	private Selector selector;
 	private ByteBuffer buffer = ByteBuffer.allocate(1024);
 
-	public void setQueue(Queue<ChannelMessage> queue) {
-		this.queue = queue;
-	}
+	@Autowired
+	private QueueServiceBean queueServiceBean;
 
 	@Override
 	public void run() {
@@ -84,7 +84,7 @@ public class SocketChannelAccepter extends Thread {
 	 * @see CounterMessageProcessor
 	 */
 	protected void proccessNewClientMessage(final SocketChannel channel) throws IOException {
-		Integer size = queue.size();
+		Integer size = queueServiceBean.size();
 		buffer.clear();
 		int read = channel.read(buffer);
 		if(read > 0) {
@@ -94,9 +94,9 @@ public class SocketChannelAccepter extends Thread {
             } else {
                 try {
                     CounterMessageRequest message = new CounterRequestParser().parse(buffer.array());
-                    queue.add(new ChannelMessage(channel, message));
-                    synchronized (queue) {
-                        queue.notify();
+                    queueServiceBean.add(new ChannelPayload(channel, message));
+                    synchronized (queueServiceBean) {
+                    	queueServiceBean.notify();
                     }
                 } catch (WrongMessageException e) {
 					reponseImmediately(channel, ResponseType.wrongMessage, 0);

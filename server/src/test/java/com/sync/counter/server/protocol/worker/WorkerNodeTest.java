@@ -3,7 +3,7 @@ package com.sync.counter.server.protocol.worker;
 import com.sync.counter.common.protocol.CounterMessageRequest;
 import com.sync.counter.common.protocol.RequestMessageBuilder;
 import com.sync.counter.server.exception.ServerException;
-import com.sync.counter.server.protocol.ChannelMessage;
+import com.sync.counter.server.protocol.ChannelPayload;
 import com.sync.counter.server.service.CounterService;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +35,7 @@ public class WorkerNodeTest {
     private CounterService serviceMock;
 
     @Mock
-    private ChannelMessage message;
+    private ChannelPayload message;
 
     @Mock
     private SocketChannel channelMock;

@@ -4,12 +4,12 @@ import java.nio.channels.SocketChannel;
 
 import com.sync.counter.common.protocol.CounterMessageRequest;
 
-public class ChannelMessage {
+public class ChannelPayload {
 
 	private final SocketChannel channel;
 	private final CounterMessageRequest message;
 	
-	public ChannelMessage(SocketChannel channel, CounterMessageRequest message) {
+	public ChannelPayload(SocketChannel channel, CounterMessageRequest message) {
 		this.channel = channel;
 		this.message = message;
 	}
