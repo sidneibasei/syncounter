@@ -8,9 +8,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Component;
 
-/**
- * Created by sidnei on 03/02/16.
- */
 @EnableAutoConfiguration
 @Component
 @ComponentScan("com.sync.counter")
@@ -18,10 +15,14 @@ public class Main implements CommandLineRunner {
 
     @Autowired
     private CommandLineInterpreter commandLine;
-
+    
     @Override
-    public void run(String[] args) {
-        commandLine.run();
+    public void run(String[] arguments) {
+    	String remoteIp = "127.0.0.1";
+    	if(arguments.length >= 1) {
+    		remoteIp = arguments[0];
+    	} 
+        commandLine.run(remoteIp);
     }
 
     public static void main(String[] args) {

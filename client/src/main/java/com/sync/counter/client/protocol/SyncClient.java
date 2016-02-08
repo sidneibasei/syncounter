@@ -1,41 +1,86 @@
 package com.sync.counter.client.protocol;
 
-import com.sync.counter.client.console.ConsoleManager;
-import com.sync.counter.client.console.command.CommandDescriptor;
-import com.sync.counter.common.protocol.CounterMessage;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
+
 import org.apache.commons.codec.binary.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
+import com.sync.counter.client.console.command.CommandDescriptor;
+import com.sync.counter.common.protocol.CounterMessageRequest;
+import com.sync.counter.common.protocol.CounterMessageResponse;
+import com.sync.counter.common.protocol.CounterProtocolContants;
+import com.sync.counter.common.protocol.RequestMessageBuilder;
+import com.sync.counter.common.protocol.parser.CounterRequestParser;
+import com.sync.counter.common.protocol.parser.CounterResponseParser;
 
 /**
  * Created by sidnei on 04/02/16.
  */
 @Component
 public class SyncClient {
+	
+    private static final Logger logger = LogManager.getLogger(SyncClient.class);
 
-    @Autowired
-    private ConsoleManager consoleManager;
+    
+    private SocketChannel channel;
+    private ByteBuffer inputBuffer = ByteBuffer.allocate(32);
+    private ByteBuffer outputBuffer = ByteBuffer.allocate(32);
 
-
-    public void openConnection() {
+    public void openConnection(String ip) throws IOException {
+    	channel = SocketChannel.open(new InetSocketAddress(ip, CounterProtocolContants.PORT));
     }
 
-    public Integer sendCommand(CommandDescriptor command) {
-
-
-        CounterMessage message = new CounterMessage(command.getType().getMessageType(), command.getArgument());
-
-        try {
-            consoleManager.writeToConsole("Sending message %s", Hex.encodeHexString(message.getMessage()));
-        }catch (IOException e) {
-
+    public CounterMessageResponse sendCommand(CommandDescriptor command) throws IOException {
+    	if(command.getType().getRequestType() == null) {
+    		logger.error("Invalide command type %s", command.getType());
+    		return null;
+    	}
+    	
+    	final CounterMessageRequest message = new RequestMessageBuilder()
+    			.withType(command.getType().getRequestType())
+    			.withValue(command.getArgument())
+    			.build();
+    	
+    	if(channel == null) {
+    		logger.error("Channel is null");
+    		throw new IOException("channel is null");
+    	}
+    	
+    	write(message);
+    	
+    	inputBuffer.clear();
+    	int read = channel.read(inputBuffer);
+    	
+    	
+    	logger.info("Read %s bytes from the server", read);
+    	
+    	return new CounterResponseParser().parse(inputBuffer.array());
+    }
+    
+    /**
+     * writes the message to the channel 
+     * @param message
+     * @throws IOException
+     */
+    protected void write(CounterMessageRequest message) throws IOException {
+    	outputBuffer.clear();
+    	byte[] messageBytes = new CounterRequestParser().toByteArray(message);
+    	outputBuffer.put(messageBytes);
+        logger.info("Sending message %s", Hex.encodeHexString(messageBytes));
+    	outputBuffer.flip();
+    	int wrote = 0;
+    	while (outputBuffer.hasRemaining()) {
+            wrote += channel.write(outputBuffer);
         }
-
-
-        return 0;
+    	logger.info("Wrote %d bytes to the channel", wrote);
     }
+    
+    
 
     public void closeConnection() {
     }
