@@ -31,10 +31,10 @@ public class CommandLineInterpreter {
     public void run(String remoteIp, Boolean generateRandom) {
     	
     	try {
-    		logger.info("Openning connection to %s", remoteIp);
+    		logger.info(String.format("Opening connection to %s", remoteIp));
     		client.openConnection(remoteIp);
     	}catch(IOException ex) {
-    		logger.error("Error connecting to server %s", remoteIp);
+    		logger.error(String.format("Error connecting to server %s", remoteIp));
     	}
     	if(generateRandom == false) {
     		executeCommandLine(); 
@@ -101,19 +101,19 @@ public class CommandLineInterpreter {
     	try {
     		CounterMessageResponse response = client.sendCommand(command);
     		if(response.isOk()) {
-    			consoleManager.writeToConsole("\nOK: Value: %s", response.getValue());
+    			consoleManager.writeToConsole(String.format("OK: Value: %s", response.getValue()));
     		} else {
-        		consoleManager.writeToConsole("\nERROR: " , response.getErrorMessage());
+        		consoleManager.writeToConsole(String.format("ERROR: " , response.getErrorMessage()));
     		}
     	} catch(IOException ex) {
-    		consoleManager.writeToConsole("Error writing/reading from server. %s", ex.getMessage());
-    	}
+    		consoleManager.writeToConsole(String.format("Error writing / reading from server. % s", ex.getMessage()));
+        }
     }
 
     protected void printHelp() {
         consoleManager.writeToConsole("\nHelp.\n\n");
         for(CommandType type : CommandType.values()) {
-            consoleManager.writeToConsole("%s\t%s\t\t%s\n", type.name(), type.getDescription(), type.getExample());
+            consoleManager.writeToConsole(String.format("%s\t%s\t\t%s\n", type.name(), type.getDescription(), type.getExample()));
         }
     }
 }

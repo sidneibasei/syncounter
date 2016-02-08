@@ -27,7 +27,6 @@ public class CounterMessageProcessor extends Thread {
 		
 	@Override
 	public void run() {
-
 		while(true) {
 			try {
 				synchronized (queue) {
@@ -42,7 +41,7 @@ public class CounterMessageProcessor extends Thread {
 		            executor.execute(worker);
 					iter.remove();
 				}
-			}catch(InterruptedException e) {
+			} catch(InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
@@ -51,5 +50,4 @@ public class CounterMessageProcessor extends Thread {
 	public void setQueue(Queue<ChannelMessage> queue) {
 		this.queue = queue;
 	}
-	
 }

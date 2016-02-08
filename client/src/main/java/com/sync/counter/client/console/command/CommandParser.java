@@ -1,6 +1,7 @@
 package com.sync.counter.client.console.command;
 
 import com.sync.counter.client.console.exception.InvalidInputException;
+import org.springframework.stereotype.Component;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -8,6 +9,7 @@ import java.util.regex.Pattern;
 /**
  * Created by sidnei on 03/02/16.
  */
+@Component
 public class CommandParser {
 
     private static final String COMMAND_REGEXP[] = new String [] {

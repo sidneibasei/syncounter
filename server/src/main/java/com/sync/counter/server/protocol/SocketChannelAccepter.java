@@ -57,34 +57,10 @@ public class SocketChannelAccepter extends Thread {
 					// accept connections 
 					try {
 						if (selectionKey.isAcceptable()) {
-							
-							final SocketChannel socketChannel = serverSocketChannel.accept();
-							socketChannel.configureBlocking(false);
-							socketChannel.register(selector, SelectionKey.OP_READ);
-							System.out.println("New client connected");
-							
+							final SocketChannel channelAccepted = serverSocketChannel.accept();
+							processNewClientConnection(channelAccepted);
 						} else if(selectionKey.isReadable()) {
-							
-							final SocketChannel channel = (SocketChannel) selectionKey.channel();
-							Integer size = queue.size();
-							
-							buffer.clear();
-							channel.read(buffer);
-							buffer.flip();
-							
-							if(size > CounterProtocolContants.MAX_QUEUE_SIZE) {
-								reponseImmediatly(channel,  ResponseType.serverBusy, size);
-							} else {
-								try {
-									CounterMessageRequest message = new CounterRequestParser().parse(buffer.array());
-									queue.add(new ChannelMessage(channel, message));
-									synchronized (queue) {
-										queue.notify();
-									}
-								} catch(WrongMessageException e) {
-									reponseImmediatly(channel,  ResponseType.wrongMessage, 0);
-								}
-							}
+							proccessNewClientMessage((SocketChannel)selectionKey.channel());
 						}	
 					} catch(IOException ex) {
 						selectionKey.cancel();
@@ -99,8 +75,64 @@ public class SocketChannelAccepter extends Thread {
 			e.printStackTrace();
 		}
 	}
-	
-	protected void reponseImmediatly(SocketChannel channel, ResponseType type, Integer value) {
+
+	/**
+	 * Processes all new messages from clients. It moves all valid messages onto a queue
+	 * which will be processed by a Thread Pool on CounterMessageProcessor.
+	 * @param channel
+	 * @throws IOException
+	 * @see CounterMessageProcessor
+	 */
+	protected void proccessNewClientMessage(final SocketChannel channel) throws IOException {
+		Integer size = queue.size();
+		buffer.clear();
+		int read = channel.read(buffer);
+		if(read > 0) {
+            buffer.flip();
+            if (size > CounterProtocolContants.MAX_QUEUE_SIZE) {
+				reponseImmediately(channel, ResponseType.serverBusy, size);
+            } else {
+                try {
+                    CounterMessageRequest message = new CounterRequestParser().parse(buffer.array());
+                    queue.add(new ChannelMessage(channel, message));
+                    synchronized (queue) {
+                        queue.notify();
+                    }
+                } catch (WrongMessageException e) {
+					reponseImmediately(channel, ResponseType.wrongMessage, 0);
+					forceCloseChannel(channel);
+				}
+            }
+        } else {
+			forceCloseChannel(channel);
+		}
+	}
+
+	private void forceCloseChannel(SocketChannel channel)  {
+		try {
+			logger.info(String.format("Closing connection from %s", channel.getRemoteAddress().toString()));
+			channel.close();
+		}catch(Exception ex) { /* just ignore it */}
+
+	}
+
+	/**
+	 * Accepts all new client connections and register them for READ event.
+	 * @throws IOException
+	 */
+	protected void processNewClientConnection(final SocketChannel socketChannel) throws IOException {
+		socketChannel.configureBlocking(false);
+		socketChannel.register(selector, SelectionKey.OP_READ);
+		logger.info(String.format("New client connected from %s", socketChannel.getRemoteAddress().toString()));
+	}
+
+	/**
+	 * Sends a message to the client immediately.
+	 * @param channel
+	 * @param type
+	 * @param value
+	 */
+	protected void reponseImmediately(SocketChannel channel, ResponseType type, Integer value) {
 		final CounterMessageResponse response = new ResponseMessageBuilder().withType(type).withValue(value).build();
 		try {
 			final ByteBuffer buffer = ByteBuffer.allocate(32);
@@ -108,10 +140,7 @@ public class SocketChannelAccepter extends Thread {
 			buffer.flip();
 			channel.write(buffer);
 		} catch(IOException e) {
-			try {
-				channel.close();
-			}catch(IOException ex) {
-			}
+			forceCloseChannel(channel);
 		}
 	}
 }

@@ -11,8 +11,8 @@ public class CustomAsyncUncaughtExceptionHandler implements  AsyncUncaughtExcept
 	private static final Logger logger = LogManager.getLogger(CustomAsyncUncaughtExceptionHandler.class);
 
 	@Override
-	public void handleUncaughtException(Throwable arg0, Method arg1, Object... arg2) {
+	public void handleUncaughtException(Throwable cause, Method method, Object... arguments) {
 		logger.error(" Error processing worker" );
-		arg0.printStackTrace();
+		cause.printStackTrace();
 	}
 }

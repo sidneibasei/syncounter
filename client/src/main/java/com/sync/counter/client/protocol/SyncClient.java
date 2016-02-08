@@ -37,7 +37,7 @@ public class SyncClient {
 
     public CounterMessageResponse sendCommand(CommandDescriptor command) throws IOException {
     	if(command.getType().getRequestType() == null) {
-    		logger.error("Invalide command type %s", command.getType());
+    		logger.error(String.format("Invalid command type %s", command.getType()));
     		return null;
     	}
     	
@@ -45,7 +45,7 @@ public class SyncClient {
     			.withType(command.getType().getRequestType())
     			.withValue(command.getArgument())
     			.build();
-    	
+
     	if(channel == null) {
     		logger.error("Channel is null");
     		throw new IOException("channel is null");
@@ -57,7 +57,7 @@ public class SyncClient {
     	int read = channel.read(inputBuffer);
     	
     	
-    	logger.info("Read %s bytes from the server", read);
+    	logger.info(String.format("Read %d bytes from the server", read));
     	
     	return new CounterResponseParser().parse(inputBuffer.array());
     }
@@ -71,18 +71,12 @@ public class SyncClient {
     	outputBuffer.clear();
     	byte[] messageBytes = new CounterRequestParser().toByteArray(message);
     	outputBuffer.put(messageBytes);
-        logger.info("Sending message %s", Hex.encodeHexString(messageBytes));
-    	outputBuffer.flip();
+        logger.info(String.format("Sending message %s", Hex.encodeHexString(messageBytes)));
+		outputBuffer.flip();
     	int wrote = 0;
     	while (outputBuffer.hasRemaining()) {
             wrote += channel.write(outputBuffer);
         }
-    	logger.info("Wrote %d bytes to the channel", wrote);
+    	logger.info(String.format("Wrote %d bytes to the channel", wrote));
     }
-    
-    
-
-    public void closeConnection() {
-    }
-
 }
