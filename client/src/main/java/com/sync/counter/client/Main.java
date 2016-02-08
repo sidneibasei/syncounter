@@ -21,8 +21,14 @@ public class Main implements CommandLineRunner {
     	String remoteIp = "127.0.0.1";
     	if(arguments.length >= 1) {
     		remoteIp = arguments[0];
-    	} 
-        commandLine.run(remoteIp);
+    	}
+    	
+    	Boolean random = Boolean.FALSE;
+    	
+    	if(arguments.length >= 2) {
+    		random = "rand".equals(arguments[1]);
+    	}
+        commandLine.run(remoteIp, random);
     }
 
     public static void main(String[] args) {

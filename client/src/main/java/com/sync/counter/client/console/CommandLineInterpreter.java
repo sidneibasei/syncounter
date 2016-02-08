@@ -28,7 +28,7 @@ public class CommandLineInterpreter {
     @Autowired
     private SyncClient client;
 
-    public void run(String remoteIp) {
+    public void run(String remoteIp, Boolean generateRandom) {
     	
     	try {
     		logger.info("Openning connection to %s", remoteIp);
@@ -36,8 +36,34 @@ public class CommandLineInterpreter {
     	}catch(IOException ex) {
     		logger.error("Error connecting to server %s", remoteIp);
     	}
+    	if(generateRandom == false) {
+    		executeCommandLine(); 
+    	}else {
+    		executeRandom();
+    	}
+    }
+    
+    protected void executeRandom() {
+    	try {
+    		CommandDescriptor cd = new CommandDescriptor(CommandType.get, 0);
+    		proccessRequest(cd);
+			Thread.sleep(1000); //1000ms
+		}catch(InterruptedException ex) {}
     	
-        CommandDescriptor command = null;
+    	// call n times
+    	for(int i = 1000; i>=0; i--) {
+    		Boolean inc = true;//((int)(Math.random()*1000) % 2) == 0;
+    		Integer value = 1;//Integer.valueOf((int)(Math.random()*10));
+    		CommandDescriptor cd = new CommandDescriptor(inc ? CommandType.inc : CommandType.dec, value);
+    		proccessRequest(cd);
+    		try {
+    			Thread.sleep(10); //400ms
+    		}catch(InterruptedException ex) {}
+    	}
+    }
+
+	protected void executeCommandLine() {
+		CommandDescriptor command = null;
         do {
             consoleManager.writeToConsole("$ ");
             try {
@@ -65,7 +91,7 @@ public class CommandLineInterpreter {
             consoleManager.writeToConsole("\ndone ;)\n");
             consoleManager.writeToConsole("What's next?\n");
         } while(command != null && !command.isExit());
-    }
+	}
 
     protected void exitSystem() {
         consoleManager.writeToConsole("\n\nGood bye.");
@@ -75,9 +101,9 @@ public class CommandLineInterpreter {
     	try {
     		CounterMessageResponse response = client.sendCommand(command);
     		if(response.isOk()) {
-    			consoleManager.writeToConsole("OK: Value: %s", response.getValue());
+    			consoleManager.writeToConsole("\nOK: Value: %s", response.getValue());
     		} else {
-        		consoleManager.writeToConsole("ERROR: " , response.getErrorMessage());
+        		consoleManager.writeToConsole("\nERROR: " , response.getErrorMessage());
     		}
     	} catch(IOException ex) {
     		consoleManager.writeToConsole("Error writing/reading from server. %s", ex.getMessage());

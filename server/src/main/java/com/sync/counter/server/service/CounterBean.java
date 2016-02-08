@@ -60,7 +60,7 @@ public class CounterBean {
 		synchronized (LOCK) {
 			try {
 				Integer value = readInteger();
-				try { Thread.sleep(150); /*just to add some trouble ;) */}catch(InterruptedException ex) {}
+				try { Thread.sleep(8); /*just to add some trouble ;) */}catch(InterruptedException ex) {}
 				value = value + delta;
 				writeInteger(value);
 				return value;
