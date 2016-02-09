@@ -1,6 +1,7 @@
 package com.sync.counter.client;
 
 import com.sync.counter.client.console.CommandLineInterpreter;
+import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -14,21 +15,27 @@ import org.springframework.stereotype.Component;
 public class Main implements CommandLineRunner {
 
     @Autowired
+    private CommandOptionBean commandOptionBean;
+
+    @Autowired
     private CommandLineInterpreter commandLine;
     
     @Override
     public void run(String[] arguments) {
-    	String remoteIp = "127.0.0.1";
-    	if(arguments.length >= 1) {
-    		remoteIp = arguments[0];
-    	}
-    	
-    	Boolean random = Boolean.FALSE;
-    	
-    	if(arguments.length >= 2) {
-    		random = "rand".equals(arguments[1]);
-    	}
-        commandLine.run(remoteIp, random);
+
+        try {
+            commandOptionBean.initialize(arguments);
+        }catch(ParseException ex) {
+            ex.printStackTrace();
+            System.exit(0);
+        }
+
+        if(commandOptionBean.isHelp()) {
+            commandOptionBean.showOptions();
+            System.exit(0);
+        } else {
+            commandLine.run();
+        }
     }
 
     public static void main(String[] args) {

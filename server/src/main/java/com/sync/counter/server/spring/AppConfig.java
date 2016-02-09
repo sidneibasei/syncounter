@@ -25,8 +25,8 @@ public class AppConfig implements AsyncConfigurer {
 	@Bean
     public ThreadPoolTaskExecutor getAsyncExecutor() {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(3);
-        executor.setMaxPoolSize(10);
+        executor.setCorePoolSize(20);
+        executor.setMaxPoolSize(60);
         executor.setQueueCapacity(5);
         executor.setThreadNamePrefix("CounterExec-");
         executor.initialize();
@@ -37,5 +37,4 @@ public class AppConfig implements AsyncConfigurer {
 	public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
 		return new CustomAsyncUncaughtExceptionHandler();
 	}
-	
 }

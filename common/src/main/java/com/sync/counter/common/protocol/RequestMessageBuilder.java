@@ -1,27 +1,12 @@
 package com.sync.counter.common.protocol;
 
-import com.sync.counter.common.protocol.CounterMessageRequest.RequestType;
+import com.sync.counter.common.protocol.RequestMessage.RequestType;
 
 
-public class RequestMessageBuilder {
+public class RequestMessageBuilder extends MessageBuilder<RequestType, Integer, RequestMessage>{
 
-	private RequestType type;
-	private Integer value;
-	
-	public RequestMessageBuilder() {
-	}
-	
-	public RequestMessageBuilder withType(RequestType type) {
-		this.type = type;
-		return this;
-	}
-	
-	public RequestMessageBuilder withValue(Integer value) {
-		this.value = value;
-		return this;
-	}
-	
-	public CounterMessageRequest build() {
-		return new CounterMessageRequest(type, value);
+	@Override
+	public RequestMessage build() {
+		return new RequestMessage(type, value);
 	}
 }

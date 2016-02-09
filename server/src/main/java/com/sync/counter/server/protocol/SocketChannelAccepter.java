@@ -15,14 +15,14 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.sync.counter.common.protocol.CounterMessageRequest;
-import com.sync.counter.common.protocol.CounterMessageResponse;
-import com.sync.counter.common.protocol.CounterMessageResponse.ResponseType;
+import com.sync.counter.common.protocol.RequestMessage;
+import com.sync.counter.common.protocol.ResponseMessage;
+import com.sync.counter.common.protocol.ResponseMessage.ResponseType;
 import com.sync.counter.common.protocol.CounterProtocolContants;
 import com.sync.counter.common.protocol.ResponseMessageBuilder;
-import com.sync.counter.common.protocol.WrongMessageException;
-import com.sync.counter.common.protocol.parser.CounterRequestParser;
-import com.sync.counter.common.protocol.parser.CounterResponseParser;
+import com.sync.counter.common.protocol.exceptions.WrongMessageException;
+import com.sync.counter.common.protocol.parser.RequestMessageParser;
+import com.sync.counter.common.protocol.parser.ResponseMessageParser;
 import com.sync.counter.server.protocol.queue.CounterMessageProcessor;
 import com.sync.counter.server.protocol.queue.QueueServiceBean;
 
@@ -93,7 +93,7 @@ public class SocketChannelAccepter extends Thread {
 				reponseImmediately(channel, ResponseType.serverBusy, size);
             } else {
                 try {
-                    CounterMessageRequest message = new CounterRequestParser().parse(buffer.array());
+                    RequestMessage message = new RequestMessageParser().parse(buffer.array());
                     queueServiceBean.add(new ChannelPayload(channel, message));
                     synchronized (queueServiceBean) {
                     	queueServiceBean.notify();
@@ -133,10 +133,10 @@ public class SocketChannelAccepter extends Thread {
 	 * @param value
 	 */
 	protected void reponseImmediately(SocketChannel channel, ResponseType type, Integer value) {
-		final CounterMessageResponse response = new ResponseMessageBuilder().withType(type).withValue(value).build();
+		final ResponseMessage response = new ResponseMessageBuilder().withType(type).withValue(value).build();
 		try {
 			final ByteBuffer buffer = ByteBuffer.allocate(32);
-			buffer.put(new CounterResponseParser().toByteArray(response));
+			buffer.put(new ResponseMessageParser().toByteArray(response));
 			buffer.flip();
 			channel.write(buffer);
 		} catch(IOException e) {

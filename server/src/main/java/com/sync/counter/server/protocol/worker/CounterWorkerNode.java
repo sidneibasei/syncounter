@@ -9,10 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.sync.counter.common.protocol.CounterMessageResponse;
-import com.sync.counter.common.protocol.CounterMessageResponse.ResponseType;
+import com.sync.counter.common.protocol.ResponseMessage;
+import com.sync.counter.common.protocol.ResponseMessage.ResponseType;
 import com.sync.counter.common.protocol.ResponseMessageBuilder;
-import com.sync.counter.common.protocol.parser.CounterResponseParser;
+import com.sync.counter.common.protocol.parser.ResponseMessageParser;
 import com.sync.counter.server.exception.ServerException;
 import com.sync.counter.server.protocol.ChannelPayload;
 import com.sync.counter.server.protocol.SocketChannelAccepter;
@@ -20,7 +20,7 @@ import com.sync.counter.server.service.CounterService;
 
 @Component
 @Scope("prototype")
-public class WorkerNode implements Runnable {
+public class CounterWorkerNode implements Runnable {
 
 	private static final Logger logger = LogManager.getLogger(SocketChannelAccepter.class);
 
@@ -68,9 +68,9 @@ public class WorkerNode implements Runnable {
 		}
 
 		try {
-			final CounterMessageResponse response = builder.build();
+			final ResponseMessage response = builder.build();
 			bufferWrite.clear();
-			bufferWrite.put(new CounterResponseParser().toByteArray(response));
+			bufferWrite.put(new ResponseMessageParser().toByteArray(response));
 			bufferWrite.flip();
 			message.getChannel().write(bufferWrite);
 			logger.info("Response sent to client. Value = " + response.getValue());

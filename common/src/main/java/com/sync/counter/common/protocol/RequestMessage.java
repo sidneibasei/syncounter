@@ -1,6 +1,12 @@
 package com.sync.counter.common.protocol;
 
-public class CounterMessageRequest {
+import com.sync.counter.common.protocol.exceptions.WrongMessageException;
+
+public class RequestMessage extends Message<RequestMessage.RequestType, Integer>{
+
+	RequestMessage(RequestType type, Integer value) {
+		super(type, value);
+	}
 
 	public enum RequestType {
 		get(0xFFFF), inc(0xFFFE), dec(0xFFFD);
@@ -29,19 +35,4 @@ public class CounterMessageRequest {
 		}
 	}
 
-	private final RequestType type;
-	private final Integer value;
-
-	public CounterMessageRequest(RequestType type, Integer value) {
-		this.type = type;
-		this.value = value;
-	}
-	
-	public RequestType getType() {
-		return type;
-	}
-
-	public Integer getValue() {
-		return value;
-	}	
 }

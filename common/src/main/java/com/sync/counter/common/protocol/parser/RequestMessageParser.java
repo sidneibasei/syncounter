@@ -6,13 +6,14 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import com.sync.counter.common.protocol.CounterMessageRequest;
-import com.sync.counter.common.protocol.CounterMessageRequest.RequestType;
-import com.sync.counter.common.protocol.WrongMessageException;
+import com.sync.counter.common.protocol.RequestMessage;
+import com.sync.counter.common.protocol.RequestMessage.RequestType;
+import com.sync.counter.common.protocol.RequestMessageBuilder;
+import com.sync.counter.common.protocol.exceptions.WrongMessageException;
 
-public class CounterRequestParser {
+public class RequestMessageParser {
 
-	public byte[] toByteArray(CounterMessageRequest reponse) throws IOException {
+	public byte[] toByteArray(RequestMessage reponse) throws IOException {
 		final ByteArrayOutputStream bos = new ByteArrayOutputStream();
         final DataOutputStream out = new DataOutputStream(bos);
         try {
@@ -29,16 +30,16 @@ public class CounterRequestParser {
         }
 	}
 	
-	public CounterMessageRequest parse(byte[] bytes) throws WrongMessageException {
+	public RequestMessage parse(byte[] bytes) throws WrongMessageException {
 		final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
         final DataInputStream in = new DataInputStream(bis);
         try {
         	int code = in.readInt();
-        	RequestType type = CounterMessageRequest.RequestType.findByCode(code);
+        	RequestType type = RequestMessage.RequestType.findByCode(code);
             Integer value = null;
             if (type != null) {
                 value = in.readInt();
-                return  new CounterMessageRequest(type, value);
+                return new RequestMessageBuilder().withType(type).withValue(value).build();
             }
         } catch(IOException ex) {
         	throw new WrongMessageException();

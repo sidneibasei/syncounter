@@ -2,6 +2,8 @@ package com.sync.counter.client.console;
 
 import java.io.IOException;
 
+import com.sync.counter.client.CommandOptionBean;
+import com.sync.counter.common.protocol.exceptions.WrongMessageException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,13 +14,16 @@ import com.sync.counter.client.console.command.CommandParser;
 import com.sync.counter.client.console.command.CommandType;
 import com.sync.counter.client.console.exception.InvalidInputException;
 import com.sync.counter.client.protocol.SyncClient;
-import com.sync.counter.common.protocol.CounterMessageResponse;
+import com.sync.counter.common.protocol.ResponseMessage;
 
 /**
  * Created by sidnei on 04/02/16.
  */
 @Component
 public class CommandLineInterpreter {
+
+    @Autowired
+    private CommandOptionBean commandOptionBean;
 
     @Autowired
     private ConsoleManager consoleManager;
@@ -28,8 +33,11 @@ public class CommandLineInterpreter {
     @Autowired
     private SyncClient client;
 
-    public void run(String remoteIp, Boolean generateRandom) {
-    	
+    public void run() {
+
+        final String remoteIp = commandOptionBean.getRemoteIp();
+        final Boolean generateRandom = commandOptionBean.isRandomMode();
+
     	try {
     		logger.info(String.format("Opening connection to %s", remoteIp));
     		client.openConnection(remoteIp);
@@ -99,13 +107,15 @@ public class CommandLineInterpreter {
 
     protected void proccessRequest(CommandDescriptor command) {
     	try {
-    		CounterMessageResponse response = client.sendCommand(command);
+    		ResponseMessage response = client.sendCommand(command);
     		if(response.isOk()) {
     			consoleManager.writeToConsole(String.format("OK: Value: %s", response.getValue()));
     		} else {
         		consoleManager.writeToConsole(String.format("ERROR: " , response.getErrorMessage()));
     		}
-    	} catch(IOException ex) {
+    	} catch(WrongMessageException ex) {
+            consoleManager.writeToConsole(String.format("Wrong message from server"));
+        } catch(IOException ex) {
     		consoleManager.writeToConsole(String.format("Error writing / reading from server. % s", ex.getMessage()));
         }
     }

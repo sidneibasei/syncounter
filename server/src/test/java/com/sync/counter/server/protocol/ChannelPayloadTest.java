@@ -7,7 +7,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.sync.counter.common.protocol.CounterMessageRequest;
+import com.sync.counter.common.protocol.RequestMessage;
 
 import static org.junit.Assert.*;
 
@@ -18,7 +18,7 @@ public class ChannelPayloadTest {
 	private SocketChannel channel;
 	
 	@Mock
-	private CounterMessageRequest message;
+	private RequestMessage message;
 	
 	@Test
 	public void testConstructor () {

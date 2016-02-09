@@ -1,7 +1,8 @@
 package com.sync.counter.server.protocol.worker;
 
-import com.sync.counter.common.protocol.CounterMessageRequest;
+import com.sync.counter.common.protocol.RequestMessage;
 import com.sync.counter.common.protocol.RequestMessageBuilder;
+import com.sync.counter.common.util.CommonUtil;
 import com.sync.counter.server.exception.ServerException;
 import com.sync.counter.server.protocol.ChannelPayload;
 import com.sync.counter.server.service.CounterService;
@@ -41,7 +42,7 @@ public class WorkerNodeTest {
     private SocketChannel channelMock;
 
     @InjectMocks
-    private WorkerNode unit;
+    private CounterWorkerNode unit;
 
     @Before
     public void setupChannel() {
@@ -55,14 +56,14 @@ public class WorkerNodeTest {
 
     @Test
     public void testIncFive() throws Exception {
-        final CounterMessageRequest requestMessage = new RequestMessageBuilder()
-                .withType(CounterMessageRequest.RequestType.inc)
+        final RequestMessage requestMessage = new RequestMessageBuilder()
+                .withType(RequestMessage.RequestType.inc)
                 .withValue(5)
                 .build();
 
         final ArgumentCaptor<ByteBuffer> bufferCaptor = ArgumentCaptor.forClass(ByteBuffer.class);
         final ArgumentCaptor<Integer> deltaCaptor = ArgumentCaptor.forClass(Integer.class);
-        final ArgumentCaptor<CounterMessageRequest.RequestType> typeCaptor = ArgumentCaptor.forClass(CounterMessageRequest.RequestType.class);
+        final ArgumentCaptor<RequestMessage.RequestType> typeCaptor = ArgumentCaptor.forClass(RequestMessage.RequestType.class);
 
 
         // mocking
@@ -80,14 +81,14 @@ public class WorkerNodeTest {
         assertEquals(5, deltaCaptor.getValue().intValue());
 
 
-        assertArrayEquals(Arrays.copyOf(createByteSequence(0x00, 10), 32), bufferCaptor.getValue().array());
+        assertArrayEquals(Arrays.copyOf(CommonUtil.createByteSequence(0x00, 10), 32), bufferCaptor.getValue().array());
     }
 
 
     @Test
     public void testDecEight() throws Exception {
-        final CounterMessageRequest requestMessage = new RequestMessageBuilder()
-                .withType(CounterMessageRequest.RequestType.dec)
+        final RequestMessage requestMessage = new RequestMessageBuilder()
+                .withType(RequestMessage.RequestType.dec)
                 .withValue(8)
                 .build();
 
@@ -107,14 +108,14 @@ public class WorkerNodeTest {
         unit.run();
 
         assertEquals(8, deltaCaptor.getValue().intValue());
-        assertArrayEquals(Arrays.copyOf(createByteSequence(0x0, 6546), 32), bufferCaptor.getValue().array());
+        assertArrayEquals(Arrays.copyOf(CommonUtil.createByteSequence(0x0, 6546), 32), bufferCaptor.getValue().array());
 
     }
 
     @Test
     public void testCurrentValue() throws Exception {
-        final CounterMessageRequest requestMessage = new RequestMessageBuilder()
-                .withType(CounterMessageRequest.RequestType.get)
+        final RequestMessage requestMessage = new RequestMessageBuilder()
+                .withType(RequestMessage.RequestType.get)
                 .withValue(0)
                 .build();
 
@@ -131,14 +132,14 @@ public class WorkerNodeTest {
 
         //running
         unit.run();
-        assertArrayEquals(Arrays.copyOf(createByteSequence(0x0, 98799), 32), bufferCaptor.getValue().array());
+        assertArrayEquals(Arrays.copyOf(CommonUtil.createByteSequence(0x0, 98799), 32), bufferCaptor.getValue().array());
 
     }
 
     @Test(expected = ServerException.class)
     public void testIOExceptionWhileWritingToChannel() throws Exception {
-        final CounterMessageRequest requestMessage = new RequestMessageBuilder()
-                .withType(CounterMessageRequest.RequestType.get)
+        final RequestMessage requestMessage = new RequestMessageBuilder()
+                .withType(RequestMessage.RequestType.get)
                 .withValue(0)
                 .build();
 
@@ -150,20 +151,5 @@ public class WorkerNodeTest {
 
         //running
         unit.run();
-    }
-
-
-    private byte[] createByteSequence(Integer ... values) throws IOException {
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        final DataOutputStream out = new DataOutputStream(bos);
-        try {
-            for(Integer value : values) {
-                out.writeInt(value);
-            }
-            return bos.toByteArray();
-        } finally {
-            out.close();
-            bos.close();
-        }
     }
 }

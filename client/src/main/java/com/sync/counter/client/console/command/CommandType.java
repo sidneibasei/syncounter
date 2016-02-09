@@ -1,6 +1,6 @@
 package com.sync.counter.client.console.command;
 
-import com.sync.counter.common.protocol.CounterMessageRequest.RequestType;
+import com.sync.counter.common.protocol.RequestMessage.RequestType;
 
 /**
  * Created by sidnei on 04/02/16.

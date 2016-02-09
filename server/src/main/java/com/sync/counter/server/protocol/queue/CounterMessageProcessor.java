@@ -10,7 +10,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import com.sync.counter.server.protocol.ChannelPayload;
-import com.sync.counter.server.protocol.worker.WorkerNode;
+import com.sync.counter.server.protocol.worker.CounterWorkerNode;
 
 @Component
 public class CounterMessageProcessor extends Thread {
@@ -18,7 +18,7 @@ public class CounterMessageProcessor extends Thread {
 	private static final Logger logger = LogManager.getLogger(CounterMessageProcessor.class);
 	
 	@Autowired
-	private QueueServiceBean queueServiceBean;
+	private QueueServiceBean queue;
 	
 	@Autowired 
 	private ApplicationContext context;
@@ -30,20 +30,20 @@ public class CounterMessageProcessor extends Thread {
 	public void run() {
 		while(true) {
 			try {
-				synchronized (queueServiceBean) {
-					queueServiceBean.wait(1000); // wait for notify or 1000ms
+				synchronized (queue) {
+					queue.wait(1000); // wait for notify or 1000ms
 				}
-				Iterator<ChannelPayload> iter = queueServiceBean.iterator();				
-				while(iter.hasNext()) {
-					final ChannelPayload channelMessage = iter.next();		
-					final WorkerNode worker = context.getBean(WorkerNode.class);
+				Iterator<ChannelPayload> iterator = queue.iterator();
+				while(iterator.hasNext()) {
+					final ChannelPayload channelMessage = iterator.next();
+					final CounterWorkerNode worker = context.getBean(CounterWorkerNode.class); /* gets a new spring bean */
 					logger.info("Got worker = " + worker);
 					worker.setChannelMessage(channelMessage);
 		            executor.execute(worker);
-					iter.remove();
+					iterator.remove();
 				}
 			} catch(InterruptedException e) {
-				e.printStackTrace();
+				logger.error(String.format("Error on thread %s", e.getMessage()), e);
 			}
 		}
 	}

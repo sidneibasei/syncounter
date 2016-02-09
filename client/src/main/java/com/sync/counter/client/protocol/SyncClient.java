@@ -5,18 +5,19 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
+import com.sync.counter.common.protocol.exceptions.WrongMessageException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import com.sync.counter.client.console.command.CommandDescriptor;
-import com.sync.counter.common.protocol.CounterMessageRequest;
-import com.sync.counter.common.protocol.CounterMessageResponse;
+import com.sync.counter.common.protocol.RequestMessage;
+import com.sync.counter.common.protocol.ResponseMessage;
 import com.sync.counter.common.protocol.CounterProtocolContants;
 import com.sync.counter.common.protocol.RequestMessageBuilder;
-import com.sync.counter.common.protocol.parser.CounterRequestParser;
-import com.sync.counter.common.protocol.parser.CounterResponseParser;
+import com.sync.counter.common.protocol.parser.RequestMessageParser;
+import com.sync.counter.common.protocol.parser.ResponseMessageParser;
 
 /**
  * Created by sidnei on 04/02/16.
@@ -35,16 +36,18 @@ public class SyncClient {
     	channel = SocketChannel.open(new InetSocketAddress(ip, CounterProtocolContants.PORT));
     }
 
-    public CounterMessageResponse sendCommand(CommandDescriptor command) throws IOException {
+    public ResponseMessage sendCommand(CommandDescriptor command) throws IOException, WrongMessageException {
     	if(command.getType().getRequestType() == null) {
     		logger.error(String.format("Invalid command type %s", command.getType()));
     		return null;
     	}
+
+		RequestMessageBuilder builder = new RequestMessageBuilder().withType(command.getType().getRequestType());
+		if(command.getArgument() != null) {
+			builder = builder.withValue(command.getArgument());
+		}
     	
-    	final CounterMessageRequest message = new RequestMessageBuilder()
-    			.withType(command.getType().getRequestType())
-    			.withValue(command.getArgument())
-    			.build();
+    	final RequestMessage message = builder.build();
 
     	if(channel == null) {
     		logger.error("Channel is null");
@@ -59,7 +62,7 @@ public class SyncClient {
     	
     	logger.info(String.format("Read %d bytes from the server", read));
     	
-    	return new CounterResponseParser().parse(inputBuffer.array());
+    	return new ResponseMessageParser().parse(inputBuffer.array());
     }
     
     /**
@@ -67,9 +70,9 @@ public class SyncClient {
      * @param message
      * @throws IOException
      */
-    protected void write(CounterMessageRequest message) throws IOException {
+    protected void write(RequestMessage message) throws IOException {
     	outputBuffer.clear();
-    	byte[] messageBytes = new CounterRequestParser().toByteArray(message);
+    	byte[] messageBytes = new RequestMessageParser().toByteArray(message);
     	outputBuffer.put(messageBytes);
         logger.info(String.format("Sending message %s", Hex.encodeHexString(messageBytes)));
 		outputBuffer.flip();

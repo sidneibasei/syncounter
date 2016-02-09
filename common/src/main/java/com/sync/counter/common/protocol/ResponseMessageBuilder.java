@@ -1,26 +1,10 @@
 package com.sync.counter.common.protocol;
 
-import com.sync.counter.common.protocol.CounterMessageResponse.ResponseType;
+import com.sync.counter.common.protocol.ResponseMessage.ResponseType;
 
-public class ResponseMessageBuilder {
+public class ResponseMessageBuilder extends MessageBuilder<ResponseType, Integer, ResponseMessage> {
 
-	private ResponseType type;
-	private Integer value;
-	
-	public ResponseMessageBuilder() {
-	}
-	
-	public ResponseMessageBuilder withType(ResponseType type) {
-		this.type = type;
-		return this;
-	}
-	
-	public ResponseMessageBuilder withValue(Integer value) {
-		this.value = value;
-		return this;
-	}
-	
-	public CounterMessageResponse build() {
-		return new CounterMessageResponse(type, value);
+	public ResponseMessage build() {
+		return new ResponseMessage(type, value);
 	}
 }
