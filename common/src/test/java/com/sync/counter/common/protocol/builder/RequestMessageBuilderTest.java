@@ -6,9 +6,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * Created by sidnei on 09/02/16.
- */
 public class RequestMessageBuilderTest {
 
     @Test

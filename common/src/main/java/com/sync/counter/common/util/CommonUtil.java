@@ -4,9 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-/**
- * Created by sidnei on 09/02/16.
- */
 public class CommonUtil {
 
     private CommonUtil() {}

@@ -8,9 +8,6 @@ import org.springframework.stereotype.Component;
 
 import com.sync.counter.server.protocol.CounterServer;
 
-/**
- * Created by sidnei on 08/02/16.
- */
 @EnableAutoConfiguration
 @Component
 @ComponentScan("com.sync.counter")

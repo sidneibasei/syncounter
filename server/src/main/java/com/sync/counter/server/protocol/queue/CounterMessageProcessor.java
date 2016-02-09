@@ -37,7 +37,7 @@ public class CounterMessageProcessor extends Thread {
 				while(iterator.hasNext()) {
 					final ChannelPayload channelMessage = iterator.next();
 					final CounterWorkerNode worker = context.getBean(CounterWorkerNode.class); /* gets a new spring bean */
-					logger.info("Got worker = " + worker);
+					logger.debug("Got worker = " + worker);
 					worker.setChannelMessage(channelMessage);
 		            executor.execute(worker);
 					iterator.remove();

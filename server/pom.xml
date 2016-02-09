@@ -50,6 +50,7 @@
             </goals>
             <configuration>
               <finalName>${project.artifactId}-${appSuffix}</finalName>
+              <outputDirectory>../dist</outputDirectory>
               <transformers>
                 <transformer implementation="com.github.edwgiz.mavenShadePlugin.log4j2CacheTransformer.PluginsCacheFileTransformer">
                 </transformer>

@@ -6,9 +6,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 
-/**
- * Created by sidnei on 09/02/16.
- */
 @Component
 public class CommandOptionBean {
 

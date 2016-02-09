@@ -6,9 +6,6 @@ import org.springframework.stereotype.Component;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Created by sidnei on 03/02/16.
- */
 @Component
 public class CommandParser {
 

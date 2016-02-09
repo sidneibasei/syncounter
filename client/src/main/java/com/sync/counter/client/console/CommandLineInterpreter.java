@@ -1,24 +1,20 @@
 package com.sync.counter.client.console;
 
-import java.io.IOException;
-
 import com.sync.counter.client.CommandOptionBean;
-import com.sync.counter.common.protocol.exceptions.WrongMessageException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import com.sync.counter.client.console.command.CommandDescriptor;
 import com.sync.counter.client.console.command.CommandParser;
 import com.sync.counter.client.console.command.CommandType;
 import com.sync.counter.client.console.exception.InvalidInputException;
 import com.sync.counter.client.protocol.SyncClient;
 import com.sync.counter.common.protocol.ResponseMessage;
+import com.sync.counter.common.protocol.exceptions.WrongMessageException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-/**
- * Created by sidnei on 04/02/16.
- */
+import java.io.IOException;
+
 @Component
 public class CommandLineInterpreter {
 

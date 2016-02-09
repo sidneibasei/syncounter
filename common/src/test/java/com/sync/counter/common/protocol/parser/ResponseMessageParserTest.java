@@ -14,9 +14,6 @@ import static com.sync.counter.common.protocol.ResponseMessage.ResponseType.serv
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-/**
- * Created by sidnei on 09/02/16.
- */
 public class ResponseMessageParserTest {
 
     @Test

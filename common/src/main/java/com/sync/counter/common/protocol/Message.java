@@ -1,8 +1,5 @@
 package com.sync.counter.common.protocol;
 
-/**
- * Created by sidnei on 09/02/16.
- */
 public abstract class Message<E extends Enum, V extends Number> {
 
     protected final E type;

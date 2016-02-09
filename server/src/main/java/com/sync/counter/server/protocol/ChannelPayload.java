@@ -1,20 +1,19 @@
 package com.sync.counter.server.protocol;
 
-import java.nio.channels.SocketChannel;
-
 import com.sync.counter.common.protocol.RequestMessage;
+import com.sync.counter.common.protocol.socket.SocketChannelDelegate;
 
 public class ChannelPayload {
 
-	private final SocketChannel channel;
+	private final SocketChannelDelegate channel;
 	private final RequestMessage message;
 	
-	public ChannelPayload(SocketChannel channel, RequestMessage message) {
+	public ChannelPayload(SocketChannelDelegate channel, RequestMessage message) {
 		this.channel = channel;
 		this.message = message;
 	}
 	
-	public SocketChannel getChannel() {
+	public SocketChannelDelegate getChannel() {
 		return channel;
 	}
 	

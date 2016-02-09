@@ -1,21 +1,20 @@
 package com.sync.counter.server.protocol;
 
-import java.nio.channels.SocketChannel;
-
+import com.sync.counter.common.protocol.RequestMessage;
+import com.sync.counter.common.protocol.socket.SocketChannelDelegate;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.sync.counter.common.protocol.RequestMessage;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ChannelPayloadTest {
 
 	@Mock
-	private SocketChannel channel;
+	private SocketChannelDelegate channel;
 	
 	@Mock
 	private RequestMessage message;

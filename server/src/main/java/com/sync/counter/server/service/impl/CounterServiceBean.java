@@ -66,7 +66,7 @@ public class CounterServiceBean implements CounterService {
 		synchronized (LOCK) {
 			try {
 				Integer value = readInteger();
-				try { Thread.sleep(2); /*just to add some trouble ;) */}catch(InterruptedException ex) {}
+				try { Thread.sleep(10); /* just to add some trouble ;) */}catch(InterruptedException ex) {}
 				value = value + delta;
 				writeInteger(value);
 				return value;

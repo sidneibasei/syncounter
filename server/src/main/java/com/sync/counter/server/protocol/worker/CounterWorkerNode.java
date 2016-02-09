@@ -1,22 +1,21 @@
 package com.sync.counter.server.protocol.worker;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
+import com.sync.counter.common.protocol.ResponseMessage;
+import com.sync.counter.common.protocol.ResponseMessage.ResponseType;
+import com.sync.counter.common.protocol.ResponseMessageBuilder;
+import com.sync.counter.common.protocol.parser.ResponseMessageParser;
+import com.sync.counter.common.protocol.socket.ByteBufferDelegate;
+import com.sync.counter.server.exception.ServerException;
+import com.sync.counter.server.protocol.ChannelPayload;
+import com.sync.counter.server.protocol.SocketChannelAccepter;
+import com.sync.counter.server.service.CounterService;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.sync.counter.common.protocol.ResponseMessage;
-import com.sync.counter.common.protocol.ResponseMessage.ResponseType;
-import com.sync.counter.common.protocol.ResponseMessageBuilder;
-import com.sync.counter.common.protocol.parser.ResponseMessageParser;
-import com.sync.counter.server.exception.ServerException;
-import com.sync.counter.server.protocol.ChannelPayload;
-import com.sync.counter.server.protocol.SocketChannelAccepter;
-import com.sync.counter.server.service.CounterService;
+import java.io.IOException;
 
 @Component
 @Scope("prototype")
@@ -33,7 +32,7 @@ public class CounterWorkerNode implements Runnable {
 		this.channelMessage = channelMessage;
 	}
 
-	private final ByteBuffer bufferWrite = ByteBuffer.allocate(32);
+	private final ByteBufferDelegate buffer = ByteBufferDelegate.allocate(32);
 
 	@Override
 	public void run() throws ServerException {
@@ -69,10 +68,10 @@ public class CounterWorkerNode implements Runnable {
 
 		try {
 			final ResponseMessage response = builder.build();
-			bufferWrite.clear();
-			bufferWrite.put(new ResponseMessageParser().toByteArray(response));
-			bufferWrite.flip();
-			message.getChannel().write(bufferWrite);
+			buffer.clear();
+			buffer.put(new ResponseMessageParser().toByteArray(response));
+			buffer.flip();
+			message.getChannel().write(buffer);
 			logger.info("Response sent to client. Value = " + response.getValue());
 		} catch (IOException e) {
 			throw new ServerException("Error sending response to client");

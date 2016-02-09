@@ -6,7 +6,7 @@
         </Console>
     </Appenders>
     <Loggers>
-        <Logger name="com.sync.counter.client" level="debug" additivity="false">
+        <Logger name="com.sync.counter.client" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
         <Logger name="com.sync.counter.common" level="info" additivity="false">

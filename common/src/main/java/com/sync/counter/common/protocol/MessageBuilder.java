@@ -1,8 +1,6 @@
 package com.sync.counter.common.protocol;
 
-/**
- * Created by sidnei on 09/02/16.
- */
+
 public abstract class MessageBuilder<E extends Enum, V extends Number, R extends Object> {
 
     protected E type;

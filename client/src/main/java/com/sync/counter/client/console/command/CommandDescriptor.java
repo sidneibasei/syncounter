@@ -1,8 +1,5 @@
 package com.sync.counter.client.console.command;
 
-/**
- * Created by sidnei on 04/02/16.
- */
 public class CommandDescriptor {
 
     private final CommandType type;

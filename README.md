@@ -1,4 +1,5 @@
-# syncounter
+# Super Remote Counter (description)
+
 
 Sharing resources between nodes is a challenge engineers have always faced when writing  distributed systems. 
 The difficultly arises when coordinating simultaneous access to the  resource and ensuring that it is done fairly and without corrupting the resource.
@@ -11,29 +12,27 @@ whatever libraries or frameworks you deem fit to assist you in the task.
 
 A command line interface is sufficient.
 
-## Technologies
+# Development notes
 
+## Technologies
 
 ### Spring boot
 
-I've chosen spring boot for the convenience to run a command line software using spring technologies.
+I've chosen spring boot for the convenience to run Spring as a command line software. 
 
-We used the dependency injection and the ThreadPoolTaskExecutor, which is the Executor's spring implementation. This
-thread pool enables the system to add more simultaneous workers (CounterWorkerNode) to access the resource, increasing the queue
+I used the dependency injection and the ThreadPoolTaskExecutor (as async executor), which is the Executor's spring implementation. 
+This thread pool enables the system to add more simultaneous workers (CounterWorkerNode) to access the resource, increasing the queue
 management performance.
-
 
 ### Java NIO
 
-Java NIO is used for reduce the number of active threads running on the server side. This technology allows a set of active 
-channels sharing the same thread lane. It allows the server to accept more simultaneous clients connected.
+Java NIO is used to reduce the number of active threads running on the server side. This technology allows a set of active 
+channels sharing the same thread lane. It allows the server to accept more simultaneous clients connected. 
+
 
 ### Testing with Mockito
-
 Mockito offers a set of facilities to Mock classes that make the test process easier. For instance, we are using
 the @Mock and @InjectMocks while testing Spring Beans, without running a spring context.
-
-
 
 ## Design details
 
@@ -56,7 +55,39 @@ For response, we have three scenarios:
 3) serverBusy: server busy. Too many requests to the server and your message can't be processed at moment. The returned value 
 represents the queue size at the moment. 
 
-### Queue management
+## Design decicions
+
+### Queue mamagement and thread pool
+The main objective to use a queue management is to release the main server thread as soon as possible to accept new connection/message. 
+
+After inserting a new message into the queue, the thread pool is noticed and then it is able to get a free worker node to process the request.
+
+### Delegate and Helper
+
+I decided to use delegate/helper for two reasons:
+- To protect the SocketChannel implementation, providing only few methods for the system;
+- To make the testing process easier.
+
+I used these pattern for ByteBuffer (ByteBufferDelegate) and SocketChannel (SocketChannelDelegate). Both of those class have 
+final methods, making the test process harder.
+
+Another bean used for the same purpose is the SocketHelperBean. Although it is used to facilitate testing , also serves to 
+isolate the Java NIO implementation.
+
+### Access to resource
+
+The access to resource is provided by CounterService interface and implemented by CounterServiceBean. I used a simple 
+thread LOCK object which synchronizes the access to the resource (counter).
+
+I haven't used the AtomicInteger because it doesn't make sense for this application. We have a functional requisite which
+defines that the system have to be able to keep the counter value even on fails and when the server is restarted.
+
+For this reason, I assumed a 'long' transaction, that means: read value, make updates (if required) and write the value 
+into the value. The access for all this transaction is thread safe.
+
+I also inserted a little Thread.sleep to make a delay between get and increment/decrement the value. If two threads access
+on the same time, it would be a big problem for the counter value.
+
 
 ## Building and Running it
 This project uses maven.
@@ -77,7 +108,7 @@ java -jar server/target/server-exec.jar
 #### Running the client
 
 ```
-java -jar client/target/client-1.0-SNAPSHOT-jar-with-dependencies.jar [ ip [ rand ]]
+java -jar client/target/client-exec.jar [--ip=<ip address> | --rand | --help]
 ```
 
 Options:

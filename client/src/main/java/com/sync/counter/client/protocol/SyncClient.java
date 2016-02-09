@@ -19,9 +19,6 @@ import com.sync.counter.common.protocol.RequestMessageBuilder;
 import com.sync.counter.common.protocol.parser.RequestMessageParser;
 import com.sync.counter.common.protocol.parser.ResponseMessageParser;
 
-/**
- * Created by sidnei on 04/02/16.
- */
 @Component
 public class SyncClient {
 	
@@ -60,7 +57,7 @@ public class SyncClient {
     	int read = channel.read(inputBuffer);
     	
     	
-    	logger.info(String.format("Read %d bytes from the server", read));
+    	logger.debug(String.format("Read %d bytes from the server", read));
     	
     	return new ResponseMessageParser().parse(inputBuffer.array());
     }
@@ -74,12 +71,12 @@ public class SyncClient {
     	outputBuffer.clear();
     	byte[] messageBytes = new RequestMessageParser().toByteArray(message);
     	outputBuffer.put(messageBytes);
-        logger.info(String.format("Sending message %s", Hex.encodeHexString(messageBytes)));
+        logger.debug(String.format("Sending message %s", Hex.encodeHexString(messageBytes)));
 		outputBuffer.flip();
     	int wrote = 0;
     	while (outputBuffer.hasRemaining()) {
             wrote += channel.write(outputBuffer);
         }
-    	logger.info(String.format("Wrote %d bytes to the channel", wrote));
+    	logger.debug(String.format("Wrote %d bytes to the channel", wrote));
     }
 }

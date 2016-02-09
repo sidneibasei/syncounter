@@ -1,19 +1,18 @@
 package com.sync.counter.server.protocol;
 
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
-import java.io.IOException;
-import java.util.Queue;
-
+import com.sync.counter.server.protocol.impl.CounterServerBean;
+import com.sync.counter.server.protocol.queue.CounterMessageProcessor;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.sync.counter.server.protocol.impl.CounterServerBean;
-import com.sync.counter.server.protocol.queue.CounterMessageProcessor;
+import java.io.IOException;
+import java.util.Queue;
+
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CounterServerBeanTest {

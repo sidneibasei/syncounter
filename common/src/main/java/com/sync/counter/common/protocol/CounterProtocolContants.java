@@ -9,5 +9,8 @@ public interface CounterProtocolContants {
 	String DEFAULT_SERVER = "127.0.0.1";
 	
 	Integer THREAD_POOL_SIZE = 5;
-	
+
+	Integer MAX_POOL_SIZE = 60;
+
+	Integer QUEUE_SIZE = 5;
 }

@@ -2,6 +2,8 @@ package com.sync.counter.server.protocol.worker;
 
 import com.sync.counter.common.protocol.RequestMessage;
 import com.sync.counter.common.protocol.RequestMessageBuilder;
+import com.sync.counter.common.protocol.socket.ByteBufferDelegate;
+import com.sync.counter.common.protocol.socket.SocketChannelDelegate;
 import com.sync.counter.common.util.CommonUtil;
 import com.sync.counter.server.exception.ServerException;
 import com.sync.counter.server.protocol.ChannelPayload;
@@ -14,21 +16,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
-import java.util.Arrays;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
-/**
- * Created by sidnei on 08/02/16.
- */
+
 @RunWith(MockitoJUnitRunner.class)
 public class WorkerNodeTest {
 
@@ -39,7 +33,7 @@ public class WorkerNodeTest {
     private ChannelPayload message;
 
     @Mock
-    private SocketChannel channelMock;
+    private SocketChannelDelegate channelMock;
 
     @InjectMocks
     private CounterWorkerNode unit;
@@ -61,9 +55,10 @@ public class WorkerNodeTest {
                 .withValue(5)
                 .build();
 
-        final ArgumentCaptor<ByteBuffer> bufferCaptor = ArgumentCaptor.forClass(ByteBuffer.class);
+        final ArgumentCaptor<ByteBufferDelegate> bufferCaptor = ArgumentCaptor.forClass(ByteBufferDelegate.class);
         final ArgumentCaptor<Integer> deltaCaptor = ArgumentCaptor.forClass(Integer.class);
         final ArgumentCaptor<RequestMessage.RequestType> typeCaptor = ArgumentCaptor.forClass(RequestMessage.RequestType.class);
+        final ArgumentCaptor<byte[]> messageCaptor = ArgumentCaptor.forClass(byte[].class);
 
 
         // mocking
@@ -80,8 +75,12 @@ public class WorkerNodeTest {
 
         assertEquals(5, deltaCaptor.getValue().intValue());
 
+        byte array[] = new byte[8];
+        bufferCaptor.getValue().get(array);
 
-        assertArrayEquals(Arrays.copyOf(CommonUtil.createByteSequence(0x00, 10), 32), bufferCaptor.getValue().array());
+        assertFalse(bufferCaptor.getValue().hasRemaining());
+        assertArrayEquals(CommonUtil.createByteSequence(0x00, 10), array);
+
     }
 
 
@@ -92,8 +91,9 @@ public class WorkerNodeTest {
                 .withValue(8)
                 .build();
 
-        final ArgumentCaptor<ByteBuffer> bufferCaptor = ArgumentCaptor.forClass(ByteBuffer.class);
+        final ArgumentCaptor<ByteBufferDelegate> bufferCaptor = ArgumentCaptor.forClass(ByteBufferDelegate.class);
         final ArgumentCaptor<Integer> deltaCaptor = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<byte[]> arrayCaptor = ArgumentCaptor.forClass(byte[].class);
 
 
         // mocking
@@ -107,8 +107,11 @@ public class WorkerNodeTest {
         //running
         unit.run();
 
+        byte array[] = new byte[8];
+        bufferCaptor.getValue().get(array);
+        assertFalse(bufferCaptor.getValue().hasRemaining());
         assertEquals(8, deltaCaptor.getValue().intValue());
-        assertArrayEquals(Arrays.copyOf(CommonUtil.createByteSequence(0x0, 6546), 32), bufferCaptor.getValue().array());
+        assertArrayEquals(CommonUtil.createByteSequence(0x0, 6546), array);
 
     }
 
@@ -119,7 +122,7 @@ public class WorkerNodeTest {
                 .withValue(0)
                 .build();
 
-        final ArgumentCaptor<ByteBuffer> bufferCaptor = ArgumentCaptor.forClass(ByteBuffer.class);
+        final ArgumentCaptor<ByteBufferDelegate> bufferCaptor = ArgumentCaptor.forClass(ByteBufferDelegate.class);
 
 
         // mocking
@@ -132,7 +135,10 @@ public class WorkerNodeTest {
 
         //running
         unit.run();
-        assertArrayEquals(Arrays.copyOf(CommonUtil.createByteSequence(0x0, 98799), 32), bufferCaptor.getValue().array());
+        byte array[] = new byte[8];
+        bufferCaptor.getValue().get(array);
+        assertFalse(bufferCaptor.getValue().hasRemaining());
+        assertArrayEquals(CommonUtil.createByteSequence(0x0, 98799), array);
 
     }
 
@@ -143,7 +149,7 @@ public class WorkerNodeTest {
                 .withValue(0)
                 .build();
 
-        final ArgumentCaptor<ByteBuffer> bufferCaptor = ArgumentCaptor.forClass(ByteBuffer.class);
+        final ArgumentCaptor<ByteBufferDelegate> bufferCaptor = ArgumentCaptor.forClass(ByteBufferDelegate.class);
 
         // mocking
         when(message.getMessage()).thenReturn(requestMessage);

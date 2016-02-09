@@ -16,9 +16,6 @@ import static com.sync.counter.common.protocol.RequestMessage.RequestType.get;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-/**
- * Created by sidnei on 09/02/16.
- */
 public class RequestMessageParserTest {
 
     @Test

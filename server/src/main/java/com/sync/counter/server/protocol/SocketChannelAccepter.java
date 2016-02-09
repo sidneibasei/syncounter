@@ -1,66 +1,63 @@
 package com.sync.counter.server.protocol;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.util.Iterator;
-import java.util.Set;
-
+import com.sync.counter.common.protocol.CounterProtocolContants;
+import com.sync.counter.common.protocol.RequestMessage;
+import com.sync.counter.common.protocol.ResponseMessage;
+import com.sync.counter.common.protocol.ResponseMessage.ResponseType;
+import com.sync.counter.common.protocol.ResponseMessageBuilder;
+import com.sync.counter.common.protocol.exceptions.WrongMessageException;
+import com.sync.counter.common.protocol.parser.RequestMessageParser;
+import com.sync.counter.common.protocol.parser.ResponseMessageParser;
+import com.sync.counter.common.protocol.socket.ByteBufferDelegate;
+import com.sync.counter.common.protocol.socket.SocketChannelDelegate;
+import com.sync.counter.server.protocol.queue.CounterMessageProcessor;
+import com.sync.counter.server.protocol.queue.QueueServiceBean;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.sync.counter.common.protocol.RequestMessage;
-import com.sync.counter.common.protocol.ResponseMessage;
-import com.sync.counter.common.protocol.ResponseMessage.ResponseType;
-import com.sync.counter.common.protocol.CounterProtocolContants;
-import com.sync.counter.common.protocol.ResponseMessageBuilder;
-import com.sync.counter.common.protocol.exceptions.WrongMessageException;
-import com.sync.counter.common.protocol.parser.RequestMessageParser;
-import com.sync.counter.common.protocol.parser.ResponseMessageParser;
-import com.sync.counter.server.protocol.queue.CounterMessageProcessor;
-import com.sync.counter.server.protocol.queue.QueueServiceBean;
+import java.io.IOException;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.util.Iterator;
+import java.util.Set;
 
 @Component
 public class SocketChannelAccepter extends Thread {
 
 	private static final Logger logger = LogManager.getLogger(SocketChannelAccepter.class);
 
-	private ServerSocketChannel serverSocketChannel;
-	private Selector selector;
-	private ByteBuffer buffer = ByteBuffer.allocate(1024);
+	private ByteBufferDelegate buffer = ByteBufferDelegate.allocate(1024);
 
 	@Autowired
 	private QueueServiceBean queueServiceBean;
 
+	@Autowired
+	private SocketHelperBean socketHelper;
+
+
 	@Override
 	public void run() {
 		try {
-			selector = Selector.open();
-			serverSocketChannel = ServerSocketChannel.open().bind(new InetSocketAddress(CounterProtocolContants.PORT));
-			serverSocketChannel.configureBlocking(false);
+			final Selector selector = socketHelper.openSelector();
+			final ServerSocketChannel serverSocketChannel = socketHelper.initializeServerChannel(selector);
 
-			final int ops = serverSocketChannel.validOps();
-			serverSocketChannel.register(selector, ops, null);
-
-			while (true) {
+			while (socketHelper.keepRunning()) {
 				selector.select();
 				Set<SelectionKey> selectedKeys = selector.selectedKeys();
 				Iterator<SelectionKey> iter = selectedKeys.iterator();
 				while (iter.hasNext()) {
-					SelectionKey selectionKey = iter.next();
-					// accept connections 
+					final SelectionKey selectionKey = iter.next();
+					// accept connections
 					try {
 						if (selectionKey.isAcceptable()) {
-							final SocketChannel channelAccepted = serverSocketChannel.accept();
-							processNewClientConnection(channelAccepted);
+							final SocketChannelDelegate channel = socketHelper.accept(serverSocketChannel);
+							processNewClientConnection(selector, channel);
 						} else if(selectionKey.isReadable()) {
-							proccessNewClientMessage((SocketChannel)selectionKey.channel());
+							final SocketChannelDelegate channel = socketHelper.selectionKeyChannel(selectionKey);
+							proccessNewClientMessage(channel);
 						}	
 					} catch(IOException ex) {
 						selectionKey.cancel();
@@ -83,7 +80,7 @@ public class SocketChannelAccepter extends Thread {
 	 * @throws IOException
 	 * @see CounterMessageProcessor
 	 */
-	protected void proccessNewClientMessage(final SocketChannel channel) throws IOException {
+	protected void proccessNewClientMessage(final SocketChannelDelegate channel) throws IOException {
 		Integer size = queueServiceBean.size();
 		buffer.clear();
 		int read = channel.read(buffer);
@@ -93,7 +90,9 @@ public class SocketChannelAccepter extends Thread {
 				reponseImmediately(channel, ResponseType.serverBusy, size);
             } else {
                 try {
-                    RequestMessage message = new RequestMessageParser().parse(buffer.array());
+					byte array[] = new byte[read];
+					buffer.get(array);
+                    RequestMessage message = new RequestMessageParser().parse(array);
                     queueServiceBean.add(new ChannelPayload(channel, message));
                     synchronized (queueServiceBean) {
                     	queueServiceBean.notify();
@@ -108,11 +107,11 @@ public class SocketChannelAccepter extends Thread {
 		}
 	}
 
-	private void forceCloseChannel(SocketChannel channel)  {
+	private void forceCloseChannel(SocketChannelDelegate channel)  {
 		try {
-			logger.info(String.format("Closing connection from %s", channel.getRemoteAddress().toString()));
+			logger.info(String.format("Closing connection from %s", channel.getRemoteAddress()));
 			channel.close();
-		}catch(Exception ex) { /* just ignore it */}
+		}catch(Exception ex) { ex.printStackTrace();/* just ignore it */}
 
 	}
 
@@ -120,10 +119,10 @@ public class SocketChannelAccepter extends Thread {
 	 * Accepts all new client connections and register them for READ event.
 	 * @throws IOException
 	 */
-	protected void processNewClientConnection(final SocketChannel socketChannel) throws IOException {
+	protected void processNewClientConnection(final Selector selector, final SocketChannelDelegate socketChannel) throws IOException {
 		socketChannel.configureBlocking(false);
 		socketChannel.register(selector, SelectionKey.OP_READ);
-		logger.info(String.format("New client connected from %s", socketChannel.getRemoteAddress().toString()));
+		logger.info(String.format("New client connected from %s", socketChannel.getRemoteAddress()));
 	}
 
 	/**
@@ -132,10 +131,10 @@ public class SocketChannelAccepter extends Thread {
 	 * @param type
 	 * @param value
 	 */
-	protected void reponseImmediately(SocketChannel channel, ResponseType type, Integer value) {
+	protected void reponseImmediately(SocketChannelDelegate channel, ResponseType type, Integer value) {
 		final ResponseMessage response = new ResponseMessageBuilder().withType(type).withValue(value).build();
 		try {
-			final ByteBuffer buffer = ByteBuffer.allocate(32);
+			final ByteBufferDelegate buffer = ByteBufferDelegate.allocate(32);
 			buffer.put(new ResponseMessageParser().toByteArray(response));
 			buffer.flip();
 			channel.write(buffer);
@@ -143,4 +142,8 @@ public class SocketChannelAccepter extends Thread {
 			forceCloseChannel(channel);
 		}
 	}
+
+
+
+
 }

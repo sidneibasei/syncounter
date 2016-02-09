@@ -7,9 +7,6 @@ import java.io.InputStreamReader;
 
 import org.springframework.stereotype.Component;
 
-/**
- * Created by sidnei on 04/02/16.
- */
 @Component
 public class ConsoleManager {
 
@@ -29,8 +26,10 @@ public class ConsoleManager {
     }
 
     public void writeToConsole(String str, Object ... objs) {
+
     	if(console != null) {
     		console.printf(str, objs);
+			console.printf("\n");
     	} else {
     		System.out.println(String.format(str,  objs));
     	}
